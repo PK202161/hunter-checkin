@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hunter Check-in</title>
+    <title>Hunter Check-in (Debug)</title>
     <style>
-        /* CSS Clean Design - โหลดไว */
+        /* CSS เดิม */
         :root { --primary: #06c755; --bg: #f2f3f5; --card: #ffffff; --text: #111; }
         body { margin: 0; padding: 20px; font-family: -apple-system, sans-serif; background-color: var(--bg); color: var(--text); }
         .container { max-width: 480px; margin: 0 auto; }
@@ -25,7 +25,7 @@
 <body>
 
     <div class="container">
-        <h3 style="text-align:center; margin-bottom:20px;">📍 Hunter Check-in</h3>
+        <h3 style="text-align:center; margin-bottom:20px;">📍 Hunter Check-in (Debug)</h3>
         
         <div class="card">
             <form id="checkinForm" onsubmit="submitForm(event)">
@@ -33,12 +33,10 @@
                     <label class="form-label required">ลูกค้า / บริษัท</label>
                     <input type="text" id="clientName" required>
                 </div>
-
                 <div class="form-group">
                     <label class="form-label required">เรื่องที่เข้าพบ</label>
                     <input type="text" id="topic" required>
                 </div>
-
                 <div class="form-group">
                     <label class="form-label required">สถานะ</label>
                     <select id="visitType" onchange="toggleLeadOptions()" required>
@@ -47,7 +45,6 @@
                         <option value="New Customer">🚀 ลูกค้าใหม่ (เปิด Lead)</option>
                     </select>
                 </div>
-
                 <div id="leadSection" class="hidden" style="background:#f0f9ff; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #bce3ff;">
                     <div class="form-group">
                         <label class="form-label required">Job Type</label>
@@ -61,23 +58,19 @@
                         <input type="number" id="estValue">
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label class="form-label">พิกัด GPS</label>
                     <input type="text" id="gpsDisplay" value="กำลังค้นหา..." readonly style="background:#eee; color:#555;">
                     <input type="hidden" id="lat"><input type="hidden" id="long">
                 </div>
-
                 <div class="form-group">
                     <label class="form-label required">รูปถ่าย</label>
                     <input type="file" id="photo" accept="image/*" required>
                 </div>
-
                 <div class="form-group">
                     <label class="form-label">Note</label>
                     <textarea id="note" rows="2"></textarea>
                 </div>
-
                 <button type="submit" id="submitBtn" class="btn-main">บันทึกข้อมูล ✅</button>
             </form>
         </div>
@@ -86,29 +79,36 @@
     <div id="loading" class="overlay hidden">
         <div class="spinner"></div>
         <p style="margin-top:10px; font-weight:bold;">กำลังส่งข้อมูล...</p>
+        <p id="debugText" style="color:red; font-size:12px; margin-top:5px;">State: Init</p>
     </div>
 
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script>
         // ==========================================
-        // 🔧 ตั้งค่าตรงนี้ (ใส่ Webhook URL ของ n8n)
-        // ==========================================
+        // 🚨 แก้ URL ตรงนี้ให้เป็นของคุณ 🚨
         const N8N_WEBHOOK_URL = "https://n8npkapp.pktechnic.com/webhook/hunter-checkin"; 
-        const LIFF_ID = "2008824673-BnxO2I7Y"; // ID เดิมของคุณ
+        const LIFF_ID = "2008824673-BnxO2I7Y";
         // ==========================================
 
         let hunterProfileName = "Unknown";
 
         window.onload = function() {
+            logDebug("Loading GPS...");
             getGPS();
             initializeLiff(LIFF_ID);
         };
+
+        function logDebug(msg) {
+            console.log(msg);
+            document.getElementById("debugText").innerText = msg;
+        }
 
         function initializeLiff(id) {
             liff.init({ liffId: id }).then(() => {
                 if (liff.isLoggedIn()) {
                     liff.getProfile().then(profile => {
                         hunterProfileName = profile.displayName;
+                        logDebug("LIFF Logged in: " + hunterProfileName);
                     });
                 } else {
                     liff.login();
@@ -122,9 +122,14 @@
                     document.getElementById("lat").value = pos.coords.latitude;
                     document.getElementById("long").value = pos.coords.longitude;
                     document.getElementById("gpsDisplay").value = "✅ " + pos.coords.latitude.toFixed(5) + ", " + pos.coords.longitude.toFixed(5);
-                }, () => {
+                    logDebug("GPS Found!");
+                }, (err) => {
                     document.getElementById("gpsDisplay").value = "❌ ไม่พบพิกัด";
+                    logDebug("GPS Error: " + err.message);
+                    alert("GPS Error: " + err.message);
                 }, {enableHighAccuracy: true});
+            } else {
+                alert("Browser ไม่รองรับ GPS");
             }
         }
 
@@ -136,10 +141,23 @@
 
         function submitForm(e) {
             e.preventDefault();
-            if(!document.getElementById("lat").value) { alert("กรุณารอพิกัด GPS"); getGPS(); return; }
+            
+            // 1. เช็ค GPS
+            if(!document.getElementById("lat").value) { 
+                alert("⚠️ กรุณารอพิกัด GPS ก่อนกดบันทึก"); 
+                getGPS(); 
+                return; 
+            }
+
+            // 2. เช็ค URL
+            if(N8N_WEBHOOK_URL.includes("your-n8n-instance")) {
+                alert("🚨 คุณยังไม่ได้แก้ URL ของ n8n ในโค้ดครับ!");
+                return;
+            }
 
             document.getElementById("loading").classList.remove("hidden");
             document.getElementById("submitBtn").disabled = true;
+            logDebug("Processing Image...");
 
             const file = document.getElementById('photo').files[0];
             const reader = new FileReader();
@@ -149,7 +167,6 @@
                 const img = new Image();
                 img.src = evt.target.result;
                 img.onload = function() {
-                    // ย่อรูปก่อนส่ง (Resize)
                     const canvas = document.createElement("canvas");
                     const ctx = canvas.getContext("2d");
                     const maxW = 800;
@@ -168,23 +185,32 @@
                         lat: document.getElementById("lat").value,
                         long: document.getElementById("long").value,
                         note: document.getElementById("note").value,
-                        image: canvas.toDataURL("image/jpeg", 0.6) // ส่ง Base64
+                        image: canvas.toDataURL("image/jpeg", 0.6)
                     };
 
-                    // ส่งเข้า n8n
+                    logDebug("Sending to n8n...");
+                    alert("กำลังส่งข้อมูลไปที่: " + N8N_WEBHOOK_URL + "\n(กด OK เพื่อเริ่มส่ง)");
+
                     fetch(N8N_WEBHOOK_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        logDebug("Response Status: " + response.status);
+                        if (!response.ok) {
+                            throw new Error("HTTP error! status: " + response.status);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         alert("✅ บันทึกสำเร็จ!");
                         liff.closeWindow();
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert("มีปัญหาการเชื่อมต่อ: " + error);
+                        logDebug("Error: " + error.message);
+                        alert("❌ ส่งไม่ผ่าน: " + error.message + "\n\nสาเหตุที่เป็นไปได้:\n1. URL n8n ไม่ใช่ HTTPS\n2. ติด CORS (ต้องแก้ที่ n8n)\n3. URL ผิด");
                         document.getElementById("loading").classList.add("hidden");
                         document.getElementById("submitBtn").disabled = false;
                     });
