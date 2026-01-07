@@ -2,31 +2,40 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hunter Check-in (Debug)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hunter Check-in</title>
     <style>
-        /* CSS เดิม */
-        :root { --primary: #06c755; --bg: #f2f3f5; --card: #ffffff; --text: #111; }
-        body { margin: 0; padding: 20px; font-family: -apple-system, sans-serif; background-color: var(--bg); color: var(--text); }
+        :root { --primary: #06c755; --bg: #f2f3f5; }
+        body { margin: 0; padding: 20px; font-family: -apple-system, sans-serif; background: var(--bg); }
         .container { max-width: 480px; margin: 0 auto; }
-        .card { background: var(--card); padding: 20px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
         .form-group { margin-bottom: 16px; }
         .form-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
         .required::after { content: " *"; color: #ff3b30; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; background: #fafafa; }
-        .btn-main { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .btn-main:disabled { background-color: #ccc; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
+        .btn-main { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; }
+        .btn-main:disabled { background: #ccc; }
         .hidden { display: none; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .log { background: #f5f5f5; padding: 10px; border-radius: 8px; font-size: 12px; max-height: 200px; overflow-y: auto; font-family: monospace; }
+        .status { padding: 8px; border-radius: 6px; margin: 5px 0; font-size: 13px; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <h3 style="text-align:center; margin-bottom:20px;">📍 Hunter Check-in (Debug)</h3>
+        <h3 style="text-align:center;">📍 Hunter Check-in</h3>
         
+        <!-- Debug Panel -->
+        <div class="card">
+            <strong>🔍 Debug Info:</strong>
+            <div id="statusLog" class="log"></div>
+        </div>
+
         <div class="card">
             <form id="checkinForm" onsubmit="submitForm(event)">
                 <div class="form-group">
@@ -40,12 +49,12 @@
                 <div class="form-group">
                     <label class="form-label required">สถานะ</label>
                     <select id="visitType" onchange="toggleLeadOptions()" required>
-                        <option value="" disabled selected>-- เลือก --</option>
-                        <option value="Existing">🤝 ลูกค้าเดิม</option>
-                        <option value="New Customer">🚀 ลูกค้าใหม่ (เปิด Lead)</option>
+                        <option value="">-- เลือก --</option>
+                        <option value="Existing">ลูกค้าเดิม</option>
+                        <option value="New Customer">ลูกค้าใหม่</option>
                     </select>
                 </div>
-                <div id="leadSection" class="hidden" style="background:#f0f9ff; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #bce3ff;">
+                <div id="leadSection" class="hidden">
                     <div class="form-group">
                         <label class="form-label required">Job Type</label>
                         <select id="salesType">
@@ -54,24 +63,24 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">ประเมินราคา (บาท)</label>
+                        <label class="form-label">ประเมินราคา</label>
                         <input type="number" id="estValue">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">พิกัด GPS</label>
-                    <input type="text" id="gpsDisplay" value="กำลังค้นหา..." readonly style="background:#eee; color:#555;">
+                    <input type="text" id="gpsDisplay" value="..." readonly>
                     <input type="hidden" id="lat"><input type="hidden" id="long">
                 </div>
                 <div class="form-group">
                     <label class="form-label required">รูปถ่าย</label>
-                    <input type="file" id="photo" accept="image/*" required>
+                    <input type="file" id="photo" accept="image/*" capture="environment" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Note</label>
                     <textarea id="note" rows="2"></textarea>
                 </div>
-                <button type="submit" id="submitBtn" class="btn-main">บันทึกข้อมูล ✅</button>
+                <button type="submit" id="submitBtn" class="btn-main">บันทึก ✅</button>
             </form>
         </div>
     </div>
@@ -79,143 +88,199 @@
     <div id="loading" class="overlay hidden">
         <div class="spinner"></div>
         <p style="margin-top:10px; font-weight:bold;">กำลังส่งข้อมูล...</p>
-        <p id="debugText" style="color:red; font-size:12px; margin-top:5px;">State: Init</p>
     </div>
 
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script>
-        // ==========================================
-        // 🚨 แก้ URL ตรงนี้ให้เป็นของคุณ 🚨
-        const N8N_WEBHOOK_URL = "https://n8npkapp.pktechnic.com/webhook/hunter-checkin"; 
+        const N8N_WEBHOOK_URL = "https://n8npkapp.pktechnic.com/webhook/hunter-checkin";
         const LIFF_ID = "2008824673-BnxO2I7Y";
-        // ==========================================
-
+        
         let hunterProfileName = "Unknown";
+        const logs = [];
+
+        function addLog(msg, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            logs.push(`[${timestamp}] ${msg}`);
+            
+            const logDiv = document.getElementById('statusLog');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerText = `[${timestamp}] ${msg}`;
+            logDiv.appendChild(statusDiv);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            console.log(msg);
+        }
+
+        window.onerror = function(msg, url, line, col, error) {
+            addLog(`❌ JS Error: ${msg} at ${line}:${col}`, 'error');
+            return false;
+        };
 
         window.onload = function() {
-            logDebug("Loading GPS...");
+            addLog("🚀 App Started", 'info');
+            addLog(`📍 Webhook: ${N8N_WEBHOOK_URL}`, 'info');
+            addLog(`📱 LIFF ID: ${LIFF_ID}`, 'info');
+            
             getGPS();
             initializeLiff(LIFF_ID);
         };
 
-        function logDebug(msg) {
-            console.log(msg);
-            document.getElementById("debugText").innerText = msg;
-        }
-
         function initializeLiff(id) {
-            liff.init({ liffId: id }).then(() => {
-                if (liff.isLoggedIn()) {
-                    liff.getProfile().then(profile => {
+            addLog("🔐 Initializing LIFF...", 'info');
+            
+            liff.init({ liffId: id })
+                .then(() => {
+                    addLog("✅ LIFF Init Success", 'success');
+                    addLog(`📱 In LINE: ${liff.isInClient()}`, 'info');
+                    
+                    if (liff.isLoggedIn()) {
+                        return liff.getProfile();
+                    } else {
+                        addLog("🔄 Redirecting to login...", 'info');
+                        liff.login();
+                    }
+                })
+                .then(profile => {
+                    if (profile) {
                         hunterProfileName = profile.displayName;
-                        logDebug("LIFF Logged in: " + hunterProfileName);
-                    });
-                } else {
-                    liff.login();
-                }
-            });
+                        addLog(`✅ Logged in: ${hunterProfileName}`, 'success');
+                    }
+                })
+                .catch(err => {
+                    addLog(`❌ LIFF Error: ${err.message}`, 'error');
+                });
         }
 
         function getGPS() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
+            addLog("📍 Getting GPS...", 'info');
+            
+            if (!navigator.geolocation) {
+                addLog("❌ GPS not supported", 'error');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                pos => {
                     document.getElementById("lat").value = pos.coords.latitude;
                     document.getElementById("long").value = pos.coords.longitude;
-                    document.getElementById("gpsDisplay").value = "✅ " + pos.coords.latitude.toFixed(5) + ", " + pos.coords.longitude.toFixed(5);
-                    logDebug("GPS Found!");
-                }, (err) => {
+                    document.getElementById("gpsDisplay").value = 
+                        `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+                    addLog(`✅ GPS Found: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`, 'success');
+                },
+                err => {
+                    addLog(`❌ GPS Error: ${err.message}`, 'error');
                     document.getElementById("gpsDisplay").value = "❌ ไม่พบพิกัด";
-                    logDebug("GPS Error: " + err.message);
-                    alert("GPS Error: " + err.message);
-                }, {enableHighAccuracy: true});
-            } else {
-                alert("Browser ไม่รองรับ GPS");
-            }
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
         }
 
         function toggleLeadOptions() {
             const isNew = document.getElementById("visitType").value === "New Customer";
-            document.getElementById("leadSection").style.display = isNew ? "block" : "none";
+            const section = document.getElementById("leadSection");
+            section.classList.toggle("hidden", !isNew);
             document.getElementById("salesType").required = isNew;
         }
 
-        function submitForm(e) {
+        async function submitForm(e) {
             e.preventDefault();
+            addLog("📤 Submit started", 'info');
             
-            // 1. เช็ค GPS
-            if(!document.getElementById("lat").value) { 
-                alert("⚠️ กรุณารอพิกัด GPS ก่อนกดบันทึก"); 
-                getGPS(); 
-                return; 
-            }
-
-            // 2. เช็ค URL
-            if(N8N_WEBHOOK_URL.includes("your-n8n-instance")) {
-                alert("🚨 คุณยังไม่ได้แก้ URL ของ n8n ในโค้ดครับ!");
+            if (!document.getElementById("lat").value) {
+                addLog("⚠️ No GPS data", 'error');
+                alert("⚠️ กรุณารอให้ระบบหาพิกัด GPS ก่อน");
+                getGPS();
                 return;
             }
 
             document.getElementById("loading").classList.remove("hidden");
             document.getElementById("submitBtn").disabled = true;
-            logDebug("Processing Image...");
 
-            const file = document.getElementById('photo').files[0];
-            const reader = new FileReader();
-            
-            reader.readAsDataURL(file);
-            reader.onload = function(evt) {
-                const img = new Image();
-                img.src = evt.target.result;
-                img.onload = function() {
-                    const canvas = document.createElement("canvas");
-                    const ctx = canvas.getContext("2d");
-                    const maxW = 800;
-                    const scale = maxW / img.width;
-                    canvas.width = maxW;
-                    canvas.height = img.height * scale;
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    const payload = {
-                        hunterName: hunterProfileName,
-                        clientName: document.getElementById("clientName").value,
-                        topic: document.getElementById("topic").value,
-                        visitType: document.getElementById("visitType").value,
-                        salesType: document.getElementById("visitType").value === "New Customer" ? document.getElementById("salesType").value : "",
-                        estValue: document.getElementById("estValue").value,
-                        lat: document.getElementById("lat").value,
-                        long: document.getElementById("long").value,
-                        note: document.getElementById("note").value,
-                        image: canvas.toDataURL("image/jpeg", 0.6)
-                    };
+            try {
+                const file = document.getElementById('photo').files[0];
+                addLog(`📷 Processing image: ${file.name} (${file.size} bytes)`, 'info');
+                
+                const imageBase64 = await processImage(file);
+                addLog(`✅ Image processed: ${imageBase64.length} chars`, 'success');
 
-                    logDebug("Sending to n8n...");
-                    alert("กำลังส่งข้อมูลไปที่: " + N8N_WEBHOOK_URL + "\n(กด OK เพื่อเริ่มส่ง)");
+                const payload = {
+                    hunterName: hunterProfileName,
+                    clientName: document.getElementById("clientName").value,
+                    topic: document.getElementById("topic").value,
+                    visitType: document.getElementById("visitType").value,
+                    salesType: document.getElementById("visitType").value === "New Customer" ? 
+                               document.getElementById("salesType").value : "",
+                    estValue: document.getElementById("estValue").value || "",
+                    lat: document.getElementById("lat").value,
+                    long: document.getElementById("long").value,
+                    note: document.getElementById("note").value,
+                    image: imageBase64
+                };
 
-                    fetch(N8N_WEBHOOK_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    })
-                    .then(response => {
-                        logDebug("Response Status: " + response.status);
-                        if (!response.ok) {
-                            throw new Error("HTTP error! status: " + response.status);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        alert("✅ บันทึกสำเร็จ!");
-                        liff.closeWindow();
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        logDebug("Error: " + error.message);
-                        alert("❌ ส่งไม่ผ่าน: " + error.message + "\n\nสาเหตุที่เป็นไปได้:\n1. URL n8n ไม่ใช่ HTTPS\n2. ติด CORS (ต้องแก้ที่ n8n)\n3. URL ผิด");
-                        document.getElementById("loading").classList.add("hidden");
-                        document.getElementById("submitBtn").disabled = false;
-                    });
+                addLog(`📦 Payload ready (${JSON.stringify(payload).length} chars)`, 'info');
+                addLog(`🌐 Sending to: ${N8N_WEBHOOK_URL}`, 'info');
+
+                const response = await fetch(N8N_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                addLog(`📥 Response status: ${response.status}`, response.ok ? 'success' : 'error');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
+
+                const result = await response.json();
+                addLog(`✅ Success: ${JSON.stringify(result)}`, 'success');
+
+                alert("✅ บันทึกสำเร็จ!");
+                
+                if (liff.isInClient()) {
+                    liff.closeWindow();
+                }
+
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`, 'error');
+                addLog(`❌ Stack: ${error.stack}`, 'error');
+                alert(`❌ เกิดข้อผิดพลาด:\n${error.message}\n\nดู Debug Log ด้านบนสำหรับรายละเอียด`);
+            } finally {
+                document.getElementById("loading").classList.add("hidden");
+                document.getElementById("submitBtn").disabled = false;
             }
+        }
+
+        function processImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    
+                    img.onload = function() {
+                        const canvas = document.createElement("canvas");
+                        const ctx = canvas.getContext("2d");
+                        const maxW = 800;
+                        const scale = Math.min(1, maxW / img.width);
+                        
+                        canvas.width = img.width * scale;
+                        canvas.height = img.height * scale;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        resolve(canvas.toDataURL("image/jpeg", 0.6));
+                    };
+                    
+                    img.onerror = reject;
+                };
+                
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
         }
     </script>
 </body>
