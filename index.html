@@ -5,117 +5,284 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hunter Check-in</title>
     <style>
-        * { box-sizing: border-box; }
-        :root { --primary: #06c755; --bg: #f2f3f5; }
-        body { 
+        * { 
+            box-sizing: border-box; 
             margin: 0; 
-            padding: 20px; 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
-            background: var(--bg); 
+            padding: 0; 
+        }
+        
+        :root { 
+            --primary: #06c755;
+            --primary-dark: #05a647;
+            --bg: #f2f3f5;
+            --card-bg: #ffffff;
+            --text: #111111;
+            --text-light: #666666;
+            --border: #e0e0e0;
+            --error: #ff3b30;
+            --success: #34c759;
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
+            padding: 20px;
         }
-        .container { max-width: 480px; margin: 0 auto; }
+        
+        .container { 
+            max-width: 480px; 
+            margin: 0 auto; 
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        
+        .header .user-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
         .card { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 16px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
-            margin-bottom: 15px; 
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 16px;
         }
-        .form-group { margin-bottom: 16px; }
-        .form-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
-        .required::after { content: " *"; color: #ff3b30; }
+        
+        .form-group { 
+            margin-bottom: 20px; 
+        }
+        
+        .form-label { 
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+        }
+        
+        .required::after { 
+            content: " *";
+            color: var(--error);
+        }
+        
         input, select, textarea { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-radius: 10px; 
-            font-size: 16px; 
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
             background: white;
+            color: var(--text);
+            transition: border-color 0.2s;
+            font-family: inherit;
         }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        input::placeholder, textarea::placeholder {
+            color: #999;
+        }
+        
+        input[readonly] {
+            background: #f5f5f5;
+            color: var(--text-light);
+        }
+        
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%23666' d='M0 0l6 8 6-8z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
         .btn-main { 
-            width: 100%; 
-            padding: 14px; 
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            border-radius: 12px; 
-            font-size: 16px; 
-            font-weight: bold; 
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
         }
-        .btn-main:disabled { background: #ccc; }
-        .hidden { display: none !important; }
+        
+        .btn-main:active {
+            transform: scale(0.98);
+            background: var(--primary-dark);
+        }
+        
+        .btn-main:disabled { 
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .lead-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #bae6fd;
+            margin-bottom: 20px;
+        }
+        
+        .lead-section h3 {
+            font-size: 15px;
+            color: #0369a1;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        
+        .gps-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .gps-display input {
+            flex: 1;
+        }
+        
+        .gps-refresh {
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        
+        .gps-refresh:active {
+            background: var(--bg);
+        }
+        
+        .hidden { 
+            display: none !important; 
+        }
+        
         .overlay { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(255,255,255,0.95); 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 9999; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
         }
+        
         .spinner { 
-            width: 40px; 
-            height: 40px; 
-            border: 4px solid #f3f3f3; 
-            border-top: 4px solid var(--primary); 
-            border-radius: 50%; 
-            animation: spin 1s linear infinite; 
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f0f0f0;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
+        
         @keyframes spin { 
             0% { transform: rotate(0deg); } 
             100% { transform: rotate(360deg); } 
         }
-        .log { 
-            background: #f5f5f5; 
-            padding: 10px; 
-            border-radius: 8px; 
-            font-size: 11px; 
-            max-height: 150px; 
-            overflow-y: auto; 
-            font-family: 'Courier New', monospace; 
+        
+        .loading-text {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
         }
-        .status { 
-            padding: 6px 10px; 
-            border-radius: 6px; 
-            margin: 3px 0; 
-            font-size: 12px; 
+        
+        .loading-status {
+            margin-top: 8px;
+            font-size: 14px;
+            color: var(--text-light);
         }
-        .status.success { background: #d4edda; color: #155724; }
-        .status.error { background: #f8d7da; color: #721c24; }
-        .status.info { background: #d1ecf1; color: #0c5460; }
-        .lead-section {
-            background: #f0f9ff;
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid #bce3ff;
+        
+        /* Success checkmark animation */
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            animation: scaleIn 0.3s ease-out;
+        }
+        
+        @keyframes scaleIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* File input styling */
+        input[type="file"]::file-selector-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 12px;
+        }
+        
+        input[type="file"]::file-selector-button:active {
+            background: var(--primary-dark);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h3 style="text-align:center; margin-bottom: 10px;">📍 Hunter Check-in</h3>
-        
-        <!-- Debug Panel -->
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <strong style="font-size: 13px;">🔍 Debug Log</strong>
-                <button onclick="clearLog()" style="padding: 4px 8px; font-size: 11px; border: 1px solid #ddd; border-radius: 4px; background: white;">Clear</button>
+        <div class="header">
+            <h1>📍 Hunter Check-in</h1>
+            <div class="user-badge" id="userBadge">
+                <span id="userName">กำลังโหลด...</span>
             </div>
-            <div id="statusLog" class="log"></div>
         </div>
 
-        <!-- Main Form -->
-        <div class="card" id="mainForm">
+        <div class="card">
             <form id="checkinForm" onsubmit="submitForm(event)">
                 <div class="form-group">
                     <label class="form-label required">ลูกค้า / บริษัท</label>
-                    <input type="text" id="clientName" placeholder="ชื่อลูกค้า" required>
+                    <input type="text" id="clientName" placeholder="ชื่อลูกค้าหรือบริษัท" required>
                 </div>
                 
                 <div class="form-group">
@@ -126,30 +293,36 @@
                 <div class="form-group">
                     <label class="form-label required">สถานะลูกค้า</label>
                     <select id="visitType" onchange="toggleLeadOptions()" required>
-                        <option value="">-- เลือก --</option>
-                        <option value="Existing">ลูกค้าเดิม</option>
-                        <option value="New Customer">ลูกค้าใหม่ (เปิด Lead)</option>
+                        <option value="">-- เลือกสถานะ --</option>
+                        <option value="Existing">🤝 ลูกค้าเดิม (Follow up)</option>
+                        <option value="New Customer">✨ ลูกค้าใหม่ (เปิด Lead)</option>
                     </select>
                 </div>
                 
                 <div id="leadSection" class="lead-section hidden">
+                    <h3>🚀 ข้อมูล Deal ใหม่</h3>
                     <div class="form-group">
                         <label class="form-label required">Job Type</label>
                         <select id="salesType">
-                            <option value="">-- เลือก --</option>
+                            <option value="">-- เลือกประเภทงาน --</option>
                             <option value="Type 1">Type 1: ซื้อมาขายไป</option>
-                            <option value="Type 2">Type 2: โซลูชั่น</option>
+                            <option value="Type 2">Type 2: งานโซลูชั่น</option>
                         </select>
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label">ประเมินราคา (บาท)</label>
-                        <input type="number" id="estValue" placeholder="0">
+                        <label class="form-label">ประเมินมูลค่า Deal (บาท)</label>
+                        <input type="number" id="estValue" placeholder="0" min="0">
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label class="form-label">พิกัด GPS</label>
-                    <input type="text" id="gpsDisplay" value="กำลังค้นหา..." readonly style="background: #f5f5f5; color: #666;">
+                    <div class="gps-display">
+                        <input type="text" id="gpsDisplay" value="กำลังค้นหา..." readonly>
+                        <button type="button" class="gps-refresh" onclick="getGPS()" title="รีเฟรช GPS">
+                            🔄
+                        </button>
+                    </div>
                     <input type="hidden" id="lat">
                     <input type="hidden" id="long">
                 </div>
@@ -161,10 +334,12 @@
                 
                 <div class="form-group">
                     <label class="form-label">หมายเหตุ</label>
-                    <textarea id="note" rows="2" placeholder="บันทึกเพิ่มเติม (ถ้ามี)"></textarea>
+                    <textarea id="note" placeholder="บันทึกเพิ่มเติม (ถ้ามี)"></textarea>
                 </div>
                 
-                <button type="submit" id="submitBtn" class="btn-main">บันทึกข้อมูล ✅</button>
+                <button type="submit" id="submitBtn" class="btn-main">
+                    บันทึกข้อมูล ✅
+                </button>
             </form>
         </div>
     </div>
@@ -172,100 +347,47 @@
     <!-- Loading Overlay -->
     <div id="loading" class="overlay hidden">
         <div class="spinner"></div>
-        <p style="margin-top: 15px; font-weight: 600; font-size: 16px;">กำลังส่งข้อมูล...</p>
-        <p id="loadingStatus" style="font-size: 13px; color: #666; margin-top: 5px;">กรุณารอสักครู่</p>
+        <p class="loading-text">กำลังส่งข้อมูล...</p>
+        <p class="loading-status" id="loadingStatus">กรุณารอสักครู่</p>
     </div>
 
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script>
+        // ==========================================
+        // 🔧 Configuration
+        // ==========================================
         const N8N_WEBHOOK_URL = "https://n8npkapp.pktechnic.com/webhook/hunter-checkin";
         const LIFF_ID = "2008824673-BnxO2I7Y";
         
         let hunterProfileName = "Unknown";
-        let isInitialized = false;
 
-        // Error Handler
-        window.onerror = function(msg, url, line, col, error) {
-            addLog(`❌ JS Error: ${msg}`, 'error');
-            addLog(`   at line ${line}:${col}`, 'error');
-            console.error('Error:', error);
-            return false;
-        };
-
-        // Promise rejection handler
-        window.onunhandledrejection = function(event) {
-            addLog(`❌ Unhandled Promise: ${event.reason}`, 'error');
-            console.error('Unhandled rejection:', event);
-        };
-
-        function addLog(msg, type = 'info') {
-            try {
-                const timestamp = new Date().toLocaleTimeString('th-TH');
-                const logDiv = document.getElementById('statusLog');
-                
-                if (logDiv) {
-                    const statusDiv = document.createElement('div');
-                    statusDiv.className = `status ${type}`;
-                    statusDiv.innerText = `[${timestamp}] ${msg}`;
-                    logDiv.appendChild(statusDiv);
-                    logDiv.scrollTop = logDiv.scrollHeight;
-                }
-                
-                console.log(`[${timestamp}] ${msg}`);
-            } catch (e) {
-                console.error('Error in addLog:', e);
-            }
-        }
-
-        function clearLog() {
-            const logDiv = document.getElementById('statusLog');
-            if (logDiv) logDiv.innerHTML = '';
-        }
-
-        // Initialize on load
+        // ==========================================
+        // 🚀 Initialize
+        // ==========================================
         window.onload = function() {
-            addLog("🚀 App Started", 'info');
-            addLog(`📍 Webhook: ${N8N_WEBHOOK_URL}`, 'info');
-            addLog(`📱 LIFF ID: ${LIFF_ID}`, 'info');
-            
-            // Show form immediately
-            const form = document.getElementById('mainForm');
-            if (form) {
-                form.style.display = 'block';
-                addLog("✅ Form displayed", 'success');
-            }
-            
-            // Start GPS
             getGPS();
-            
-            // Initialize LIFF
-            setTimeout(() => {
-                addLog("🔐 Starting LIFF init...", 'info');
-                initializeLiff(LIFF_ID);
-            }, 100);
+            initializeLiff(LIFF_ID);
         };
 
+        // ==========================================
+        // 🔐 LIFF Authentication
+        // ==========================================
         function initializeLiff(id) {
             if (typeof liff === 'undefined') {
-                addLog("❌ LIFF SDK not loaded", 'error');
-                alert("❌ LIFF SDK ไม่โหลด\nกรุณาเปิดใน LINE app");
+                alert("❌ กรุณาเปิดใน LINE app");
                 return;
             }
 
             liff.init({ liffId: id })
                 .then(() => {
-                    addLog("✅ LIFF Init Success", 'success');
-                    addLog(`📱 In LINE: ${liff.isInClient()}`, liff.isInClient() ? 'success' : 'error');
-                    
                     if (!liff.isInClient()) {
                         alert("⚠️ กรุณาเปิดใน LINE app\n\nส่ง URL นี้ใน LINE:\nhttps://liff.line.me/" + LIFF_ID);
+                        return;
                     }
                     
                     if (liff.isLoggedIn()) {
-                        addLog("🔓 Already logged in, getting profile...", 'info');
                         return liff.getProfile();
                     } else {
-                        addLog("🔄 Not logged in, redirecting...", 'info');
                         liff.login();
                         return null;
                     }
@@ -273,23 +395,24 @@
                 .then(profile => {
                     if (profile) {
                         hunterProfileName = profile.displayName;
-                        addLog(`✅ Logged in: ${hunterProfileName}`, 'success');
-                        isInitialized = true;
+                        document.getElementById('userName').innerText = hunterProfileName;
                     }
                 })
                 .catch(err => {
-                    addLog(`❌ LIFF Error: ${err.message}`, 'error');
                     console.error('LIFF Error:', err);
-                    alert(`❌ LIFF Error: ${err.message}\n\nกรุณาลองใหม่อีกครั้ง`);
+                    alert("❌ เกิดข้อผิดพลาด: " + err.message);
                 });
         }
 
+        // ==========================================
+        // 📍 GPS Functions
+        // ==========================================
         function getGPS() {
-            addLog("📍 Getting GPS...", 'info');
+            const gpsDisplay = document.getElementById("gpsDisplay");
+            gpsDisplay.value = "กำลังค้นหา...";
             
             if (!navigator.geolocation) {
-                addLog("❌ GPS not supported", 'error');
-                document.getElementById("gpsDisplay").value = "❌ ไม่รองรับ GPS";
+                gpsDisplay.value = "❌ ไม่รองรับ GPS";
                 return;
             }
 
@@ -297,18 +420,24 @@
                 pos => {
                     document.getElementById("lat").value = pos.coords.latitude;
                     document.getElementById("long").value = pos.coords.longitude;
-                    document.getElementById("gpsDisplay").value = 
-                        `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
-                    addLog(`✅ GPS: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`, 'success');
+                    gpsDisplay.value = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
                 },
                 err => {
-                    addLog(`❌ GPS Error: ${err.message}`, 'error');
-                    document.getElementById("gpsDisplay").value = "❌ ไม่พบพิกัด";
+                    console.error('GPS Error:', err);
+                    gpsDisplay.value = "❌ ไม่พบพิกัด";
+                    alert("⚠️ ไม่สามารถหาพิกัด GPS ได้\n\nกรุณา:\n1. เปิด Location Services\n2. อนุญาตให้ LINE ใช้ตำแหน่ง\n3. ลองกดปุ่ม 🔄 อีกครั้ง");
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                { 
+                    enableHighAccuracy: true, 
+                    timeout: 10000, 
+                    maximumAge: 0 
+                }
             );
         }
 
+        // ==========================================
+        // 📝 Form Functions
+        // ==========================================
         function toggleLeadOptions() {
             const visitType = document.getElementById("visitType").value;
             const section = document.getElementById("leadSection");
@@ -325,98 +454,102 @@
             }
         }
 
+        // ==========================================
+        // 📤 Submit Form
+        // ==========================================
         async function submitForm(e) {
             e.preventDefault();
-            addLog("📤 Submit started", 'info');
             
+            // Validate GPS
             if (!document.getElementById("lat").value) {
-                addLog("⚠️ No GPS data", 'error');
                 alert("⚠️ กรุณารอให้ระบบหาพิกัด GPS");
                 getGPS();
                 return;
             }
 
-            const loading = document.getElementById("loading");
-            const submitBtn = document.getElementById("submitBtn");
-            const loadingStatus = document.getElementById("loadingStatus");
-            
-            loading.classList.remove("hidden");
-            submitBtn.disabled = true;
+            // Validate photo
+            const photoFile = document.getElementById('photo').files[0];
+            if (!photoFile) {
+                alert("⚠️ กรุณาเลือกรูปถ่าย");
+                return;
+            }
+
+            showLoading("กำลังประมวลผลรูปภาพ...");
 
             try {
-                const file = document.getElementById('photo').files[0];
-                if (!file) {
-                    throw new Error("ไม่มีรูปภาพ");
-                }
+                // Process image
+                const imageBase64 = await processImage(photoFile);
                 
-                addLog(`📷 Image: ${file.name} (${(file.size/1024).toFixed(1)} KB)`, 'info');
-                loadingStatus.innerText = "กำลังประมวลผลรูปภาพ...";
-                
-                const imageBase64 = await processImage(file);
-                addLog(`✅ Image OK (${(imageBase64.length/1024).toFixed(1)} KB)`, 'success');
-
+                // Prepare payload
                 const payload = {
                     hunterName: hunterProfileName,
-                    clientName: document.getElementById("clientName").value,
-                    topic: document.getElementById("topic").value,
+                    clientName: document.getElementById("clientName").value.trim(),
+                    topic: document.getElementById("topic").value.trim(),
                     visitType: document.getElementById("visitType").value,
                     salesType: document.getElementById("visitType").value === "New Customer" ? 
                                document.getElementById("salesType").value : "",
                     estValue: document.getElementById("estValue").value || "",
                     lat: document.getElementById("lat").value,
                     long: document.getElementById("long").value,
-                    note: document.getElementById("note").value,
+                    note: document.getElementById("note").value.trim(),
                     image: imageBase64
                 };
 
-                addLog(`📦 Payload ready (${(JSON.stringify(payload).length/1024).toFixed(1)} KB)`, 'info');
-                loadingStatus.innerText = "กำลังส่งข้อมูลไปยังเซิร์ฟเวอร์...";
-                
+                showLoading("กำลังส่งข้อมูล...");
+
+                // Send to N8N with timeout
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-                const startTime = Date.now();
                 const response = await fetch(N8N_WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                     signal: controller.signal
                 });
-                
-                clearTimeout(timeoutId);
-                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
-                addLog(`📥 Response: ${response.status} (${elapsed}s)`, response.ok ? 'success' : 'error');
+                clearTimeout(timeoutId);
 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    throw new Error(`เซิร์ฟเวอร์ตอบกลับ: ${response.status}`);
                 }
 
                 const result = await response.json();
-                addLog(`✅ SUCCESS!`, 'success');
-
-                alert("✅ บันทึกสำเร็จ!");
                 
-                if (typeof liff !== 'undefined' && liff.isInClient()) {
-                    setTimeout(() => liff.closeWindow(), 500);
-                }
+                // Show success
+                showSuccess();
+                
+                // Close after delay
+                setTimeout(() => {
+                    if (typeof liff !== 'undefined' && liff.isInClient()) {
+                        liff.closeWindow();
+                    } else {
+                        hideLoading();
+                        // Reset form
+                        document.getElementById("checkinForm").reset();
+                        getGPS();
+                    }
+                }, 2000);
 
             } catch (error) {
+                hideLoading();
+                
+                let errorMsg = "เกิดข้อผิดพลาด";
+                
                 if (error.name === 'AbortError') {
-                    addLog(`❌ Timeout: >30s`, 'error');
-                    alert("❌ หมดเวลา: ใช้เวลานานเกิน 30 วินาที\n\nลองใหม่อีกครั้ง");
+                    errorMsg = "หมดเวลา: การส่งข้อมูลใช้เวลานานเกินไป\n\nกรุณาลองใหม่อีกครั้ง";
                 } else {
-                    addLog(`❌ Error: ${error.message}`, 'error');
-                    alert(`❌ ผิดพลาด:\n${error.message}\n\nดู Debug Log ด้านบน`);
+                    errorMsg = error.message || "ไม่สามารถส่งข้อมูลได้";
                 }
-            } finally {
-                loading.classList.add("hidden");
-                submitBtn.disabled = false;
-                loadingStatus.innerText = "กรุณารอสักครู่";
+                
+                alert("❌ " + errorMsg);
+                console.error('Submit Error:', error);
             }
         }
 
+        // ==========================================
+        // 🖼️ Image Processing
+        // ==========================================
         function processImage(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -428,13 +561,17 @@
                     img.onload = function() {
                         const canvas = document.createElement("canvas");
                         const ctx = canvas.getContext("2d");
-                        const maxW = 800;
-                        const scale = Math.min(1, maxW / img.width);
+                        
+                        // Resize to max 800px width
+                        const maxWidth = 800;
+                        const scale = Math.min(1, maxWidth / img.width);
                         
                         canvas.width = img.width * scale;
                         canvas.height = img.height * scale;
+                        
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         
+                        // Convert to JPEG with 60% quality
                         resolve(canvas.toDataURL("image/jpeg", 0.6));
                     };
                     
@@ -445,10 +582,29 @@
                 reader.readAsDataURL(file);
             });
         }
-    </script>
 
-    <!-- Eruda Console for Mobile Debugging -->
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>eruda.init();</script>
+        // ==========================================
+        // 🎨 UI Functions
+        // ==========================================
+        function showLoading(message) {
+            document.getElementById("loadingStatus").innerText = message;
+            document.getElementById("loading").classList.remove("hidden");
+            document.getElementById("submitBtn").disabled = true;
+        }
+
+        function hideLoading() {
+            document.getElementById("loading").classList.add("hidden");
+            document.getElementById("submitBtn").disabled = false;
+        }
+
+        function showSuccess() {
+            const loading = document.getElementById("loading");
+            loading.innerHTML = `
+                <div class="success-icon">✓</div>
+                <p class="loading-text" style="color: var(--success);">บันทึกสำเร็จ!</p>
+                <p class="loading-status">กำลังปิดหน้าต่าง...</p>
+            `;
+        }
+    </script>
 </body>
 </html>
