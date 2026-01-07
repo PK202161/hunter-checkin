@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hunter Check-in</title>
     <style>
+        /* CSS เดิม */
         :root { --primary: #06c755; --bg: #f2f3f5; }
         body { margin: 0; padding: 20px; font-family: -apple-system, sans-serif; background: var(--bg); }
         .container { max-width: 480px; margin: 0 auto; }
@@ -96,11 +97,9 @@
         const LIFF_ID = "2008824673-BnxO2I7Y";
         
         let hunterProfileName = "Unknown";
-        const logs = [];
 
         function addLog(msg, type = 'info') {
             const timestamp = new Date().toLocaleTimeString();
-            logs.push(`[${timestamp}] ${msg}`);
             
             const logDiv = document.getElementById('statusLog');
             const statusDiv = document.createElement('div');
@@ -109,7 +108,7 @@
             logDiv.appendChild(statusDiv);
             logDiv.scrollTop = logDiv.scrollHeight;
             
-            console.log(msg);
+            console.log(`[${timestamp}] ${msg}`);
         }
 
         window.onerror = function(msg, url, line, col, error) {
@@ -132,7 +131,7 @@
             liff.init({ liffId: id })
                 .then(() => {
                     addLog("✅ LIFF Init Success", 'success');
-                    addLog(`📱 In LINE: ${liff.isInClient()}`, 'info');
+                    addLog(`📱 In LINE: ${liff.isInClient()}`, liff.isInClient() ? 'success' : 'error');
                     
                     if (liff.isLoggedIn()) {
                         return liff.getProfile();
@@ -166,7 +165,7 @@
                     document.getElementById("long").value = pos.coords.longitude;
                     document.getElementById("gpsDisplay").value = 
                         `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
-                    addLog(`✅ GPS Found: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`, 'success');
+                    addLog(`✅ GPS: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`, 'success');
                 },
                 err => {
                     addLog(`❌ GPS Error: ${err.message}`, 'error');
@@ -178,8 +177,7 @@
 
         function toggleLeadOptions() {
             const isNew = document.getElementById("visitType").value === "New Customer";
-            const section = document.getElementById("leadSection");
-            section.classList.toggle("hidden", !isNew);
+            document.getElementById("leadSection").classList.toggle("hidden", !isNew);
             document.getElementById("salesType").required = isNew;
         }
 
@@ -188,8 +186,8 @@
             addLog("📤 Submit started", 'info');
             
             if (!document.getElementById("lat").value) {
-                addLog("⚠️ No GPS data", 'error');
-                alert("⚠️ กรุณารอให้ระบบหาพิกัด GPS ก่อน");
+                addLog("⚠️ No GPS", 'error');
+                alert("⚠️ กรุณารอพิกัด GPS");
                 getGPS();
                 return;
             }
@@ -199,10 +197,10 @@
 
             try {
                 const file = document.getElementById('photo').files[0];
-                addLog(`📷 Processing image: ${file.name} (${file.size} bytes)`, 'info');
+                addLog(`📷 Image: ${file.name} (${file.size} bytes)`, 'info');
                 
                 const imageBase64 = await processImage(file);
-                addLog(`✅ Image processed: ${imageBase64.length} chars`, 'success');
+                addLog(`✅ Image OK: ${imageBase64.length} chars`, 'success');
 
                 const payload = {
                     hunterName: hunterProfileName,
@@ -218,25 +216,23 @@
                     image: imageBase64
                 };
 
-                addLog(`📦 Payload ready (${JSON.stringify(payload).length} chars)`, 'info');
-                addLog(`🌐 Sending to: ${N8N_WEBHOOK_URL}`, 'info');
+                addLog(`📦 Payload: ${JSON.stringify(payload).length} chars`, 'info');
+                addLog(`🌐 Sending...`, 'info');
 
                 const response = await fetch(N8N_WEBHOOK_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                addLog(`📥 Response status: ${response.status}`, response.ok ? 'success' : 'error');
+                addLog(`📥 Status: ${response.status}`, response.ok ? 'success' : 'error');
 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(`HTTP ${response.status}`);
                 }
 
                 const result = await response.json();
-                addLog(`✅ Success: ${JSON.stringify(result)}`, 'success');
+                addLog(`✅ Success!`, 'success');
 
                 alert("✅ บันทึกสำเร็จ!");
                 
@@ -246,8 +242,7 @@
 
             } catch (error) {
                 addLog(`❌ Error: ${error.message}`, 'error');
-                addLog(`❌ Stack: ${error.stack}`, 'error');
-                alert(`❌ เกิดข้อผิดพลาด:\n${error.message}\n\nดู Debug Log ด้านบนสำหรับรายละเอียด`);
+                alert(`❌ ผิดพลาด: ${error.message}`);
             } finally {
                 document.getElementById("loading").classList.add("hidden");
                 document.getElementById("submitBtn").disabled = false;
@@ -257,31 +252,29 @@
         function processImage(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                
                 reader.onload = function(e) {
                     const img = new Image();
                     img.src = e.target.result;
-                    
                     img.onload = function() {
                         const canvas = document.createElement("canvas");
                         const ctx = canvas.getContext("2d");
                         const maxW = 800;
                         const scale = Math.min(1, maxW / img.width);
-                        
                         canvas.width = img.width * scale;
                         canvas.height = img.height * scale;
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        
                         resolve(canvas.toDataURL("image/jpeg", 0.6));
                     };
-                    
                     img.onerror = reject;
                 };
-                
                 reader.onerror = reject;
                 reader.readAsDataURL(file);
             });
         }
     </script>
+
+    <!-- Eruda Console for Mobile Debugging -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
 </body>
 </html>
